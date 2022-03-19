@@ -20,12 +20,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
-        // Create a new scene
-        
-        
-        // Set the scene to the view
-       
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -33,6 +27,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
+        
+        //Detect vertical planes
+        configuration.planeDetection = .vertical
 
         // Run the view's session
         sceneView.session.run(configuration)
@@ -44,9 +41,28 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
+    // MARK - Methods
+    
+    func getHoopNode() ->SCNNode {
+        let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
+        
+        let hoopNode = scene.rootNode.clone()
+        
+        hoopNode.eulerAngles.x -= .pi / 2
+        
+        return hoopNode
+    }
 
     // MARK: - ARSCNViewDelegate
-    
+     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
+            return
+        }
+      // Add the hoop to the center of detected vertical plane
+         node.addChildNode(getHoopNode())
+        
+    }
+}
 /*
     // Override to create and configure nodes for anchors added to the view's session.
     func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
@@ -56,18 +72,4 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }
 */
     
-    func session(_ session: ARSession, didFailWithError error: Error) {
-        // Present an error message to the user
-        
-    }
-    
-    func sessionWasInterrupted(_ session: ARSession) {
-        // Inform the user that the session has been interrupted, for example, by presenting an overlay
-        
-    }
-    
-    func sessionInterruptionEnded(_ session: ARSession) {
-        // Reset tracking and/or remove existing anchors if consistent tracking is required
-        
-    }
-}
+   
