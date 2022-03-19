@@ -53,14 +53,45 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         return hoopNode
     }
 
-    // MARK: - ARSCNViewDelegate
+    func getPlane(for anchor: ARPlaneAnchor) -> SCNNode {
+        let extent = anchor.extent
+        let plane = SCNPlane(width: CGFloat(extent.x), height: CGFloat(extent.z))
+        plane.firstMaterial?.diffuse.contents = UIColor.green
+        
+        let planeNode = SCNNode(geometry: plane)
+        planeNode.opacity = 0.25
+        
+        planeNode.eulerAngles.x -= .pi / 2
+        
+        return planeNode
+    }
+    
+    func updatePlaneNode(_ node:SCNNode, for anchor: ARPlaneAnchor) {
+        guard let planeNode = node.childNodes.first, let plane = planeNode.geometry as? SCNPlane else { return }
+        
+        planeNode.simdPosition = anchor.center
+        
+        let extent = anchor.extent
+        plane.height = CGFloat(extent.z)
+        plane.width = CGFloat(extent.x)
+    }
+   
+    
+    
      func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
             return
         }
-      // Add the hoop to the center of detected vertical plane
-         node.addChildNode(getHoopNode())
+      
+         node.addChildNode(getPlane(for: planeAnchor))
         
+    }
+    func renderer( _ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
+            return
+        }
+        
+        updatePlaneNode(node, for: planeAnchor)
     }
 }
 /*
