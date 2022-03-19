@@ -5,8 +5,7 @@
 //  Created by Владимир Ладыгин on 19.03.2022.
 //
 
-import UIKit
-import SceneKit
+
 import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
@@ -23,10 +22,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.showsStatistics = true
         
         // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        
         
         // Set the scene to the view
-        sceneView.scene = scene
+       
     }
     
     override func viewWillAppear(_ animated: Bool) {
