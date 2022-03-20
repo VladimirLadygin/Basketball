@@ -1,5 +1,11 @@
 # Basketball
+
 AR Basketball on SceneKIT
+
+## Installation 
+
+Clone the project and compile in XCode 13 or above. iPhone 6S with support of iOS 15 or above if needed
+
 ## Screenshots
 
 ![Screenshot 1](https://github.com/VladimirLadygin/Basketball/blob/main/Basketball/Screenshots/Screensot1.jpg?raw=true)
