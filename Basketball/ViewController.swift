@@ -63,7 +63,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let ballNode = SCNNode(geometry: ball)
         
         // Add physicsBody
-        ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape())
+        ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: ballNode))
         
         let power = Float(5)
         let x = -matrixCameraTransform.m31 * power
@@ -82,6 +82,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let scene = SCNScene(named: "Hoop.scn", inDirectory: "art.scnassets")!
         
         let hoopNode = scene.rootNode.clone()
+        
+        hoopNode.physicsBody = SCNPhysicsBody(
+            type: .static,
+            shape: SCNPhysicsShape(
+                node: hoopNode,
+                options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.concavePolyhedron]))
         
         //        hoopNode.eulerAngles.x -= .pi / 2
         
