@@ -10,8 +10,13 @@ import ARKit
 
 class ViewController: UIViewController, ARSCNViewDelegate {
     
+    // MARK: -Outlets
+
     @IBOutlet var sceneView: ARSCNView!
     
+    // MARK: -Properites
+    
+    // Create a session configuration
     let configuration = ARWorldTrackingConfiguration()
     
     var isHoopAdded = false {
@@ -20,7 +25,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             sceneView.session.run(configuration, options: .removeExistingAnchors)
         }
     }
-    
+    // MARK: -UIViewController
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -37,7 +42,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         
         //Detect vertical planes
-        configuration.planeDetection = .vertical
+        configuration.planeDetection = [.vertical, .horizontal]
+        
+        // Add people occlusion
+        configuration.frameSemantics.insert(.personSegmentationWithDepth)
+                
         
         // Run the view's session
         sceneView.session.run(configuration)
@@ -52,27 +61,28 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     // MARK - Methods
     
     func getBall() -> SCNNode? {
+        // Get current frame
         guard let frame = sceneView.session.currentFrame else { return nil }
-        
+        // Get camera transorm
         let cameraTransform = frame.camera.transform
         let matrixCameraTransform = SCNMatrix4(cameraTransform)
-        
+        // Create ball geometry
         let ball = SCNSphere(radius: 0.125)
         ball.firstMaterial?.diffuse.contents = UIImage(named:"basketball")
-        
+        // Create ball node
         let ballNode = SCNNode(geometry: ball)
         
         // Add physicsBody
         ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: ballNode))
-        
+        // Calculate matrix force for pushing ball
         let power = Float(5)
         let x = -matrixCameraTransform.m31 * power
         let y = matrixCameraTransform.m32 * power
         let z = -matrixCameraTransform.m33 * power
         let forceDirection = SCNVector3(x, y, z)
-        
+        // Apply force
         ballNode.physicsBody?.applyForce(forceDirection, asImpulse: true)
-        
+        // Assign camera position to ball
         ballNode.simdTransform = frame.camera.transform
         
         return ballNode
@@ -98,10 +108,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let extent = anchor.extent
         let plane = SCNPlane(width: CGFloat(extent.x), height: CGFloat(extent.z))
         plane.firstMaterial?.diffuse.contents = UIColor.green
-        
+        //Create 25% transpatrent plane node
         let planeNode = SCNNode(geometry: plane)
         planeNode.opacity = 0.25
-        
+        //Rotate plane node
         planeNode.eulerAngles.x -= .pi / 2
         
         return planeNode
@@ -109,21 +119,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     func updatePlaneNode(_ node:SCNNode, for anchor: ARPlaneAnchor) {
         guard let planeNode = node.childNodes.first, let plane = planeNode.geometry as? SCNPlane else { return }
-        
+        //Change plane node center
         planeNode.simdPosition = anchor.center
-        
+        //Change plane node size
         let extent = anchor.extent
         plane.height = CGFloat(extent.z)
         plane.width = CGFloat(extent.x)
     }
     
-    
+    // MARK: - ARSCNViewDelegate
+
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
             return
         }
-        
+        //Add hit hoop to the detected vertical plane
         node.addChildNode(getPlane(for: planeAnchor))
         
     }
@@ -131,16 +142,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
             return
         }
-        
+        // Update plane node
         updatePlaneNode(node, for: planeAnchor)
     }
     
     
     @IBAction func userTapped(_ sender: UITapGestureRecognizer) {
         if isHoopAdded {
-            // Add basketballs
+            // Get ball node
             guard let ballNode = getBall() else { return }
-            
+            // Add ball on the camera position
             sceneView.scene.rootNode.addChildNode(ballNode)
             
         } else {
@@ -153,9 +164,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             // Get hope node and set its coordinates tp the point of user touch
             let hoopNode = getHoopNode()
             hoopNode.simdTransform = result.worldTransform
+            // Hoopnode make is vertical
             hoopNode.eulerAngles.x -= .pi / 2
             
             isHoopAdded = true
+            //Add hoop to planeAnchor
             sceneView.scene.rootNode.addChildNode(hoopNode)
             
         }
