@@ -52,12 +52,26 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     // MARK - Methods
     
     func getBall() -> SCNNode? {
+        guard let frame = sceneView.session.currentFrame else { return nil }
+        
+        let cameraTransform = frame.camera.transform
+        let matrixCameraTransform = SCNMatrix4(cameraTransform)
+        
         let ball = SCNSphere(radius: 0.125)
         ball.firstMaterial?.diffuse.contents = UIImage(named:"basketball")
         
         let ballNode = SCNNode(geometry: ball)
         
-        guard let frame = sceneView.session.currentFrame else { return nil }
+        // Add physicsBody
+        ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape())
+        
+        let power = Float(5)
+        let x = -matrixCameraTransform.m31 * power
+        let y = matrixCameraTransform.m32 * power
+        let z = -matrixCameraTransform.m33 * power
+        let forceDirection = SCNVector3(x, y, z)
+        
+        ballNode.physicsBody?.applyForce(forceDirection, asImpulse: true)
         
         ballNode.simdTransform = frame.camera.transform
         
