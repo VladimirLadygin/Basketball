@@ -11,7 +11,7 @@ import ARKit
 class ViewController: UIViewController, ARSCNViewDelegate {
     
     // MARK: -Outlets
-
+    
     @IBOutlet var sceneView: ARSCNView!
     
     // MARK: -Properites
@@ -21,7 +21,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     var isHoopAdded = false {
         didSet {
-            configuration.planeDetection = []
+//            configuration.planeDetection = [] //code disabled for game world tracking
             sceneView.session.run(configuration, options: .removeExistingAnchors)
         }
     }
@@ -39,15 +39,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        
-        
         //Detect vertical planes
         configuration.planeDetection = [.vertical, .horizontal]
         
         // Add people occlusion
         configuration.frameSemantics.insert(.personSegmentationWithDepth)
                 
-        
         // Run the view's session
         sceneView.session.run(configuration)
     }
@@ -75,9 +72,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Add physicsBody
         ballNode.physicsBody = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: ballNode))
         // Calculate matrix force for pushing ball
-        let power = Float(5)
+        let power = Float(6)
         let x = -matrixCameraTransform.m31 * power
-        let y = matrixCameraTransform.m32 * power
+        let y = -matrixCameraTransform.m32 * power
         let z = -matrixCameraTransform.m33 * power
         let forceDirection = SCNVector3(x, y, z)
         // Apply force
@@ -99,8 +96,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                 node: hoopNode,
                 options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.concavePolyhedron]))
         
-        //        hoopNode.eulerAngles.x -= .pi / 2
-        
         return hoopNode
     }
     
@@ -108,11 +103,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let extent = anchor.extent
         let plane = SCNPlane(width: CGFloat(extent.x), height: CGFloat(extent.z))
         plane.firstMaterial?.diffuse.contents = UIColor.green
+        
         //Create 25% transpatrent plane node
         let planeNode = SCNNode(geometry: plane)
         planeNode.opacity = 0.25
+        
         //Rotate plane node
         planeNode.eulerAngles.x -= .pi / 2
+        
+        // Add phisics for plane nodes
+        planeNode.physicsBody = SCNPhysicsBody(type: .static, shape: SCNPhysicsShape(geometry: plane))
         
         return planeNode
     }
@@ -125,23 +125,25 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let extent = anchor.extent
         plane.height = CGFloat(extent.z)
         plane.width = CGFloat(extent.x)
+        
+        if isHoopAdded {
+            planeNode.opacity = 0
+        }
     }
     
     // MARK: - ARSCNViewDelegate
-
+    
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
-            return
-        }
+        // guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {return}
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {return}
         //Add hit hoop to the detected vertical plane
         node.addChildNode(getPlane(for: planeAnchor))
         
     }
     func renderer( _ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
-            return
-        }
+//        guard let planeAnchor = anchor as? ARPlaneAnchor, planeAnchor.alignment == .vertical else {
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {return}
         // Update plane node
         updatePlaneNode(node, for: planeAnchor)
     }
@@ -175,12 +177,5 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
     }
 }
-
-
-//    // Override to create and configure nodes for anchors added to the view's session.
-//    func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-//        let node = SCNNode()
-//        return node
-//    }
 
 
