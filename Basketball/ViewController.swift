@@ -43,7 +43,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         configuration.planeDetection = [.vertical, .horizontal]
         
         // Add people occlusion
-        configuration.frameSemantics.insert(.personSegmentationWithDepth)
+        peopleOcclusionAdd()
                 
         // Run the view's session
         sceneView.session.run(configuration)
@@ -115,6 +115,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         planeNode.physicsBody = SCNPhysicsBody(type: .static, shape: SCNPhysicsShape(geometry: plane))
         
         return planeNode
+    }
+    
+    // Add people occlusion
+    func peopleOcclusionAdd(){
+        if #available(iOS 13.0, *) {
+            configuration.frameSemantics.insert(.personSegmentationWithDepth)
+        } else {
+            print(#line, #function, "People occlusion is not supported, please update your iOS to version 13 or newer")
+        }
     }
     
     func updatePlaneNode(_ node:SCNNode, for anchor: ARPlaneAnchor) {
